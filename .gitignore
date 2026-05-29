@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+.env
+*.log
+
+# Holds the shared API key baked into writer builds — never commit this
+src/main/bundled-config.json

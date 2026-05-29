@@ -1,0 +1,12 @@
+{
+  "_comment": "Copy this file to 'bundled-config.json' (same folder) and fill in values to ship a build with ONE shared API key + zero setup for writers. bundled-config.json is gitignored. It seeds the app's config on first run only (writers can still change things in Settings). Leave a field as empty string to skip it.",
+  "anthropicApiKey": "sk-ant-...",
+  "model": "claude-sonnet-4-5-20251001",
+  "fastModel": "claude-haiku-4-5-20251001",
+  "wpSiteUrl": "",
+  "wpUsername": "",
+  "wpAppPassword": "",
+  "dataDir": "",
+  "currentRole": "writer",
+  "accountName": ""
+}
