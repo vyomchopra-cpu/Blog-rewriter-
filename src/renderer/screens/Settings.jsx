@@ -26,7 +26,7 @@ export default function Settings({ config, setConfig, accentColor }) {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     anthropicApiKey: config?.anthropicApiKey || '',
-    model: config?.model || 'claude-sonnet-4-5-20251001',
+    model: config?.model || 'claude-sonnet-4-5-20250929',
     fastModel: config?.fastModel || '',
     wpSiteUrl: config?.wpSiteUrl || '',
     wpUsername: config?.wpUsername || '',
@@ -111,7 +111,7 @@ export default function Settings({ config, setConfig, accentColor }) {
               value={form.model}
               onChange={e => set('model', e.target.value)}
             >
-              <option value="claude-sonnet-4-5-20251001">Sonnet 4.5 — recommended (good quality, ~5× cheaper than Opus)</option>
+              <option value="claude-sonnet-4-5-20250929">Sonnet 4.5 — recommended (good quality, ~5× cheaper than Opus)</option>
               <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest (test quality before relying on it)</option>
             </select>
           </Field>
@@ -123,7 +123,7 @@ export default function Settings({ config, setConfig, accentColor }) {
             >
               <option value="">Same as main model</option>
               <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest (recommended for these steps)</option>
-              <option value="claude-sonnet-4-5-20251001">Sonnet 4.5</option>
+              <option value="claude-sonnet-4-5-20250929">Sonnet 4.5</option>
             </select>
           </Field>
           <div className="flex items-center gap-3">

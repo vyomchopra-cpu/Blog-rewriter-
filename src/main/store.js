@@ -3,7 +3,7 @@ const path = require('path')
 
 let _store = null
 
-const SONNET = 'claude-sonnet-4-5-20251001'
+const SONNET = 'claude-sonnet-4-5-20250929'
 const HAIKU = 'claude-haiku-4-5-20251001'
 const OPUS = 'claude-opus-4-5-20251101'
 
@@ -27,7 +27,7 @@ async function getStore() {
   _store = new Store({
     defaults: {
       anthropicApiKey: '',
-      model: 'claude-sonnet-4-5-20251001',
+      model: 'claude-sonnet-4-5-20250929',
       fastModel: '',
       wpSiteUrl: '',
       wpUsername: '',
@@ -98,7 +98,7 @@ async function getConfig() {
   const wpPwd = await getWpPassword(store)
   return {
     anthropicApiKey: store.get('anthropicApiKey', ''),
-    model: store.get('model', 'claude-sonnet-4-5-20251001'),
+    model: store.get('model', 'claude-sonnet-4-5-20250929'),
     fastModel: store.get('fastModel', ''),
     wpSiteUrl: store.get('wpSiteUrl', ''),
     wpUsername: store.get('wpUsername', ''),
@@ -184,7 +184,7 @@ async function getApiCredentials() {
   const wpPwd = await getWpPassword(store)
   return {
     anthropicApiKey: store.get('anthropicApiKey', ''),
-    model: store.get('model', 'claude-sonnet-4-5-20251001'),
+    model: store.get('model', 'claude-sonnet-4-5-20250929'),
     fastModel: store.get('fastModel', ''),
     wpSiteUrl: store.get('wpSiteUrl', ''),
     wpUsername: store.get('wpUsername', ''),

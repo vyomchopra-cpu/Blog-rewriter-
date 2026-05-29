@@ -217,18 +217,25 @@ CTA angle: ${persona.ctaAngle}`)
   if (customInstructions && customInstructions.trim()) {
     parts.push(`ADDITIONAL STANDING INSTRUCTIONS FROM THE EDITORIAL TEAM (highest priority — follow exactly):\n${customInstructions.trim()}`)
   }
-  if (extraContext && extraContext.trim()) {
-    parts.push(extraContext.trim())
-  }
+  // NOTE: extraContext (the brand knowledge base) is NOT embedded here anymore.
+  // It's passed separately to callClaude as a cached block to cut repeat cost.
 
   return parts.join('\n\n')
 }
 
-async function callClaude(apiKey, model, systemPrompt, userMessage, maxTokens = 8000, temperature) {
+async function callClaude(apiKey, model, systemPrompt, userMessage, maxTokens = 8000, temperature, cacheContext = '') {
+  // Prompt caching: the (large, stable) brand context block is sent as a cached
+  // system block so repeated calls (bulk runs, multi-pass on one article) reuse it
+  // at ~10% of the input cost instead of re-paying for it every time.
+  let system = systemPrompt
+  if (cacheContext && cacheContext.trim()) {
+    system = [{ type: 'text', text: cacheContext, cache_control: { type: 'ephemeral' } }]
+    if (systemPrompt && systemPrompt.trim()) system.push({ type: 'text', text: systemPrompt })
+  }
   const payload = {
     model,
     max_tokens: maxTokens,
-    system: systemPrompt,
+    system,
     messages: [{ role: 'user', content: userMessage }]
   }
   if (typeof temperature === 'number') payload.temperature = temperature
@@ -253,9 +260,6 @@ async function generateOutline(apiKey, model, inputs, opts = {}) {
   const brandName = brand === 'MIS' ? 'MoveInSync' : 'WorkInSync'
 
   let systemPrompt = `You are an SEO research analyst. Analyze the keyword provided and return a structured research summary and article outline in valid JSON only. No markdown, no explanation, just the JSON object.`
-  if (opts.extraContext && opts.extraContext.trim()) {
-    systemPrompt += `\n\nUse this brand context and past editor feedback to shape the outline (favor angles and sections the brand cares about):\n${opts.extraContext.trim().slice(0, 8000)}`
-  }
   if (opts.customInstructions && opts.customInstructions.trim()) {
     systemPrompt += `\n\nStanding editorial instructions:\n${opts.customInstructions.trim()}`
   }
@@ -292,7 +296,7 @@ Return this exact JSON structure (use the real target word count, do not default
   ]
 }`
 
-  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, 4000)
+  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, 4000, undefined, opts.extraContext)
 
   // Strip markdown code fences if present
   const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim()
@@ -331,7 +335,7 @@ Never use em dashes (—) or en dashes (–). Use commas or split sentences inst
 No markdown. No explanation. No preamble. Start directly with the article HTML.
 For internal links, use this exact placeholder format where relevant: {{LINK:anchor text|URL}}`
 
-  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, maxTokens, opts.temperature)
+  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, maxTokens, opts.temperature, opts.extraContext)
   return sanitizeArticle(raw)
 }
 
@@ -342,9 +346,9 @@ async function humanizeDraft(apiKey, model, draftHTML, keyword, brand, opts = {}
   const maxTokens = Math.min(opts.maxTokens || 8000, Math.ceil((draftHTML || '').length / 3) + 800)
 
   let systemPrompt = `You are a human editor. Your job is to revise AI-generated B2B content so it passes AI detection tools by eliminating structural AI patterns. Make ONLY the changes listed. Do not add new sections. Do not change the outline structure. Do not alter facts or data.`
-  if (opts.extraContext && opts.extraContext.trim()) {
-    systemPrompt += `\n\nApply the lessons in this brand context and past editor feedback while revising:\n${opts.extraContext.trim()}`
-  }
+  // Cost optimisation: humanization only edits existing text, so we do NOT inject
+  // the full brand knowledge base here (it already shaped the draft). Standing
+  // instructions are small and kept.
   if (opts.customInstructions && opts.customInstructions.trim()) {
     systemPrompt += `\n\nStanding editorial instructions (highest priority):\n${opts.customInstructions.trim()}`
   }
@@ -667,9 +671,6 @@ RULES:
 - Reinforce these canonical phrases naturally (co-occurrence is how the model learns our positioning): ${phrases}.
 - Neutral buyer-guide / practitioner tone, never marketing copy (engines down-weight promotional text).
 - First person plural ('we') for the brand. Never use em dashes.`
-  if (extraContext && extraContext.trim()) {
-    systemPrompt += `\n\nUse this authoritative brand context:\n${extraContext.trim().slice(0, 8000)}`
-  }
 
   const userMessage = `Topic / focus: ${topic}
 Brand: ${brandName}${competitor ? `\nCompetitor: ${competitor}` : ''}
@@ -678,7 +679,7 @@ ${notes ? `Extra instructions: ${notes}` : ''}
 
 Return clean HTML only (use <h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>, and <script type="application/ld+json"> where schema is requested). No markdown, no preamble.`
 
-  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, 3500, 0.5)
+  const raw = await callClaude(apiKey, model, systemPrompt, userMessage, 3500, 0.5, extraContext)
   // Strip markdown code fences the model sometimes wraps HTML in (was rendering as literal junk).
   const cleaned = raw.replace(/^```(?:html|json)?\n?/i, '').replace(/\n?```$/i, '').trim()
   return sanitizeArticle(cleaned)

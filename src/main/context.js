@@ -24,9 +24,9 @@ const INJECT = {
   collaterals: { label: 'BRAND COLLATERAL', group: 'knowledge' },
   specs:       { label: 'PRODUCT SPEC',   group: 'knowledge' }
 }
-const CONTEXT_CHAR_CAP = 16000   // shared by context + collaterals + specs
-const EXAMPLE_CHAR_CAP = 12000
-const FEEDBACK_CHAR_CAP = 6000
+const CONTEXT_CHAR_CAP = 10000   // shared by context + collaterals + specs (lowered for cost)
+const EXAMPLE_CHAR_CAP = 6000
+const FEEDBACK_CHAR_CAP = 4000
 
 let _store = null
 async function getStore() {
