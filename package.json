@@ -45,6 +45,13 @@
         "dir"
       ]
     },
+    "mac": {
+      "target": [
+        "dir"
+      ],
+      "identity": null,
+      "category": "public.app-category.productivity"
+    },
     "portable": {
       "artifactName": "BlogGenerator-Portable-${version}.exe"
     },
