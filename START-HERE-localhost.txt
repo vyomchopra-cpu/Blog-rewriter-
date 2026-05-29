@@ -1,0 +1,29 @@
+BLOG GENERATOR — Local version (runs in your web browser via localhost)
+======================================================================
+Works on Mac AND Windows. The shared Anthropic API key is already built in,
+so there is no setup. Your work and feedback are saved OFFLINE on this machine.
+
+ONE-TIME (skip if you already have it):
+  Install Node.js 18 or newer from  https://nodejs.org  (the "LTS" button).
+
+TO RUN:
+  1. Unzip this folder somewhere (Desktop is fine).
+  2. Open a terminal in this folder:
+        - Mac:     open Terminal, type  cd   then drag this folder in, press Enter
+        - Windows: open the folder, type  cmd  in the address bar, press Enter
+  3. Type:        npm run serve
+        (if that says dependencies are missing, run once:  npm install --omit=dev  then  npm run serve)
+  4. Open your browser to:    http://localhost:4317
+  5. To stop it: go back to the terminal and press  Ctrl + C.
+
+WHERE YOUR DATA LIVES:
+  Everything (articles history, settings, feedback) is saved OFFLINE in the
+  "blog-data" folder created inside this folder. Nothing leaves your machine
+  except the calls to the AI to write articles.
+
+WEEKLY FEEDBACK:
+  In the app, go to  Context & Feedback  ->  "Export weekly feedback file".
+  It creates  blog-data/WEEKLY-EXPORT-<date>.md  -- send that one file each week.
+
+IMPORTANT: this folder contains the shared API key. Keep it internal to the team;
+do not upload it anywhere public.
