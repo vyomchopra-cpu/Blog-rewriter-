@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import StatusBadge from '../components/StatusBadge.jsx'
 
 const keywords = {
@@ -12,7 +12,7 @@ const keywords = {
   }
 }
 
-const formats = ['Informational', 'Listicle', 'How-To Guide', 'Definitive Guide', 'Comparison']
+const formats = ['Informational', 'Listicle', 'How-To Guide', 'Definitive Guide', 'Comparison', 'Newsletter', 'One-Pager']
 
 const personas = [
   { id: 'transport-manager', name: 'Transport Manager' },
@@ -47,11 +47,31 @@ export default function BulkQueue({ accentColor, config }) {
   const [selected, setSelected] = useState(new Set())
   const [rows, setRows] = useState([])
   const [running, setRunning] = useState(false)
+  const [customKw, setCustomKw] = useState([])
+  const [paste, setPaste] = useState('')
+
+  useEffect(() => {
+    window.electron.invoke('state-get', { key: 'customKeywords', def: [] }).then(v => setCustomKw(v || []))
+  }, [])
 
   const allKeywords = [
+    ...customKw.filter(c => c.brand === brand && c.geo === geo).map(c => ({ keyword: c.keyword, lost: !!c.lost, custom: true })),
     ...(keywords[brand]?.[geo]?.lost || []).map(k => ({ keyword: k, lost: true })),
     ...(keywords[brand]?.[geo]?.target || []).filter(k => !(keywords[brand]?.[geo]?.lost || []).map(x => x.toLowerCase()).includes(k.toLowerCase())).map(k => ({ keyword: k, lost: false }))
   ]
+
+  function addPasted() {
+    const lines = paste.split('\n').map(s => s.trim()).filter(Boolean)
+    if (!lines.length) return
+    const additions = lines
+      .filter(l => !customKw.some(c => c.keyword.toLowerCase() === l.toLowerCase() && c.brand === brand && c.geo === geo))
+      .map(l => ({ keyword: l, brand, geo, lost: false }))
+    const next = [...customKw, ...additions]
+    setCustomKw(next)
+    window.electron.invoke('state-set', { key: 'customKeywords', value: next })
+    setSelected(s => { const n = new Set(s); lines.forEach(l => n.add(l)); return n })
+    setPaste('')
+  }
 
   function toggleKw(kw) {
     setSelected(s => {
@@ -193,7 +213,7 @@ export default function BulkQueue({ accentColor, config }) {
             </div>
           </div>
           <div className="space-y-1.5 max-h-52 overflow-y-auto">
-            {allKeywords.map(({ keyword, lost }) => (
+            {allKeywords.map(({ keyword, lost, custom }) => (
               <label key={keyword} className="flex items-center gap-3 py-1.5 cursor-pointer group">
                 <input
                   type="checkbox"
@@ -202,10 +222,22 @@ export default function BulkQueue({ accentColor, config }) {
                   className="w-4 h-4 rounded border-[#3a3a3a] bg-[#0f0f0f]"
                   style={{ accentColor }}
                 />
-                <span className="text-sm text-[#d1d5db] group-hover:text-[#f5f5f5] transition-colors">{keyword}</span>
+                <span className="text-sm text-[#d1d5db] group-hover:text-[#f5f5f5] transition-colors">{custom ? '⭐ ' : ''}{keyword}</span>
                 {lost && <span className="bg-[#ef4444] text-white text-xs px-1.5 py-0.5 rounded font-medium">LOST</span>}
               </label>
             ))}
+          </div>
+
+          {/* Paste your own (one per line) — saved to your keyword library */}
+          <div className="mt-3 border-t border-[#2a2a2a] pt-3">
+            <textarea
+              rows={2}
+              value={paste}
+              onChange={e => setPaste(e.target.value)}
+              placeholder="Add your own keywords/topics — one per line — and they’ll be selected + saved"
+              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f5f5f5] resize-none"
+            />
+            <button onClick={addPasted} disabled={!paste.trim()} className="mt-2 text-xs px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-[#9ca3af] hover:text-[#f5f5f5] disabled:opacity-40">+ Add & select</button>
           </div>
           {selected.size > 0 && rows.length === 0 && (
             <button
